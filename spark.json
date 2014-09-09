@@ -1,0 +1,7 @@
+{
+  "name": "MS5806_02BA,
+  "author": "Richard Vogel <aiwindustries@gmail.com>",
+  "license": "GPL v3",
+  "version": "1.0.0",
+  "description": "A library that allows Spark IO integration with MS5806_02BA Pressure Sensor"
+}

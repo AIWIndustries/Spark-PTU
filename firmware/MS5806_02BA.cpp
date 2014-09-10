@@ -18,7 +18,7 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 #include "MS5806_02BA52.h"
-#include "Wire.h"
+#include "math.h"
 //
 //  Global Pressure variable
 //
@@ -38,8 +38,8 @@ uint16_t MS5806_02BA52::C7 = constrain(C7, 0, 65535);
 //
 //  Pressure and Temp variables.
 //
-uint32_t MS5806_02BA52::D1 = constrain(D1, 0, 16777216UL);
-uint32_t MS5806_02BA52::D2 = constrain(D2, 0, 16777216UL);
+uint32_t MS5806_02BA52::DP1 = constrain(DP1, 0, 16777216UL);
+uint32_t MS5806_02BA52::DP2 = constrain(DP2, 0, 16777216UL);
 
 float MS5806_02BA52::temperature = 0.00;
 
@@ -143,11 +143,11 @@ void MS5806_02BA52::getPROM(void)
 void MS5806_02BA52::getTemperature(void)
 {
 	uint32_t tempT= 0x00000000;
-	sendCommand(D2_4096);
+	sendCommand(Dp2_4096);
 	readData();
 	tempT = (tempT | ((0x00000000 | p_Response[0]) << 16) | ((0x00000000 | p_Response[1]) << 8) | p_Response[2]);
-	D2 = uint32_t(tempT);
-	dT = D2 - (C5 * 256);
+	DP2 = uint32_t(tempT);
+	dT = DP2 - (C5 * 256);
 	TEMP = 2000 + dT * (C6 / 8388608);
 	if (TEMP >= 2000)
 	{
@@ -192,16 +192,22 @@ void MS5806_02BA52::calcV_LowTemp()
 void MS5806_02BA52::getPressure(void)
 {
 	uint32_t tempP = 0x0000;
-	sendCommand(D1_4096);
+	sendCommand(Dp1_4096);
 	readData();
+	for (int i = 0; i < 3; i++)
+	{
+	    Serial.println(p_Response[i], HEX);
+	}
 	tempP = (tempP | ((0x0000 | p_Response[0]) << 16) | ((0x0000 | p_Response[1]) << 8) | p_Response[2]);
-	D1 = uint32_t(tempP);  // base pressure value
+	DP1 = uint32_t(tempP);  // base pressure value
+	Serial.print(F("prelim pressure: "));
+	Serial.println(DP1, DEC);
 	
 	/*****************calc temp compensated pressure****************/
 	
 	OFF = (C2 * 131072) + ((C4 * dT) / 64);
 	SENS = (C1 * 65536) + ((C3 * dT) / 128);
-	P = ((D1 * SENS / 2097152 - OFF) / 32768);
+	P = ((DP1 * SENS / 2097152 - OFF) / 32768);
 	pressure = float(P) / 100;	
 }
 

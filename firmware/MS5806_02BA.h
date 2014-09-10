@@ -31,16 +31,16 @@
 
 #define	pPROM_READ {0xA0, 0xA2, 0xA4, 0xA6, 0xA8, 0xAA, 0xAC, 0xAE} //Address commands to read PROM coefficients 0-7.
 
-#define	D1_256							0x40		//  Command to initiate pressure conversion OSR = 256.
-#define	D1_512							0x42		//  Command to initiate pressure conversion OSR = 512.
-#define	D1_1024							0x44		//  Command to initiate pressure conversion OSR = 1024.
-#define	D1_2048							0x46		//  Command to initiate pressure conversion OSR = 2048.
-#define	D1_4096							0x48		//  Command to initiate pressure conversion OSR = 4096.
-#define	D2_256							0x50		//  Command to initiate temperature conversion OSR = 256.
-#define	D2_512							0x52		//  Command to initiate temperature conversion OSR = 512.
-#define	D2_1024							0x54		//  Command to initiate temperature conversion OSR = 1024.
-#define	D2_2048  						0x56		//  Command to initiate temperature conversion OSR = 2048.
-#define	D2_4096  						0x58		//  Command to initiate temperature conversion OSR = 4096.
+#define	Dp1_256							0x40		//  Command to initiate pressure conversion OSR = 256.
+#define	Dp1_512							0x42		//  Command to initiate pressure conversion OSR = 512.
+#define	Dp1_1024						0x44		//  Command to initiate pressure conversion OSR = 1024.
+#define	Dp1_2048						0x46		//  Command to initiate pressure conversion OSR = 2048.
+#define	Dp1_4096						0x48		//  Command to initiate pressure conversion OSR = 4096.
+#define	Dp2_256							0x50		//  Command to initiate temperature conversion OSR = 256.
+#define	Dp2_512							0x52		//  Command to initiate temperature conversion OSR = 512.
+#define	Dp2_1024						0x54		//  Command to initiate temperature conversion OSR = 1024.
+#define	Dp2_2048  						0x56		//  Command to initiate temperature conversion OSR = 2048.
+#define	Dp2_4096  						0x58		//  Command to initiate temperature conversion OSR = 4096.
 
 #define ADC_READ						0x00 		//  Command to read requested data.
 //
@@ -68,10 +68,10 @@ class MS5806_02BA52
 	static uint16_t C6;
 	static uint16_t C7;
 	//  Pressure variables within the class
-	static uint32_t D1;
+	static uint32_t DP1;
 	static int32_t P;
 	//  Temperature variables within the class
-	static uint32_t D2;
+	static uint32_t DP2;
 	static int32_t dT;
 	static float temperature;
 	static int32_t TEMP;
@@ -98,3 +98,4 @@ class MS5806_02BA52
 extern MS5806_02BA52 PTU_P;
 
 #endif  //  End of MS5806_02BA52.h
+

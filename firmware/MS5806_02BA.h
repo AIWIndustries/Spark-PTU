@@ -60,21 +60,21 @@ class MS5806_02BA52
       
   private:
 	//  Calibration and CRC Values.
-    static uint16_t C1;
-	static uint16_t C2;
-	static uint16_t C3;
-	static uint16_t C4;
-	static uint16_t C5;
-	static uint16_t C6;
-	static uint16_t C7;
+    static int64_t C1;
+	static int64_t C2;
+	static int64_t C3;
+	static int64_t C4;
+	static int64_t C5;
+	static int64_t C6;
+	static int64_t C7;
 	//  Pressure variables within the class
-	static uint32_t DP1;
-	static int32_t P;
+	static int64_t DP1;
+	static int64_t P;
 	//  Temperature variables within the class
-	static uint32_t DP2;
-	static int32_t dT;
+	static int64_t DP2;
+	static int64_t dT;
 	static float temperature;
-	static int32_t TEMP;
+	static int64_t TEMP;
 	static int64_t OFF;
 	static int64_t SENS;
 	static int64_t T2;
@@ -97,5 +97,4 @@ class MS5806_02BA52
 
 extern MS5806_02BA52 PTU_P;
 
-#endif  //  End of MS5806_02BA52.h
-
+#endif  //  End of MS5806_02BA52.

@@ -1,8 +1,10 @@
 /*
   MS5806_02BA52.cpp 
-  - Arduino library for controlling the Measurement Specialities MS5806_02BA52 in I2C mode.
+  - SPARK library for controlling the Measurement Specialities MS5806_02BA52 in I2C mode.
   
-  Copyright 2014 by AIW Industries, LLC (Richard Vogel)
+  -**Special thanks to @tmib and others from the SPARK IO forum for assistance with calculation formulas**
+  
+  Copyright 2014 by AIW Industries, LLC 
   
   This program is free software: you can redistribute it and/or modify 
   it under the terms of the GNU General Public License as published by 
@@ -18,7 +20,6 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 #include "MS5806_02BA52.h"
-#include "math.h"
 //
 //  Global Pressure variable
 //
@@ -27,28 +28,27 @@ float p_temperature = 0.00;
 //
 //
 //**********Class Variables*************//
-
-uint16_t MS5806_02BA52::C1 = constrain(C1, 0, 65535);
-uint16_t MS5806_02BA52::C2 = constrain(C2, 0, 65535);
-uint16_t MS5806_02BA52::C3 = constrain(C3, 0, 65535);
-uint16_t MS5806_02BA52::C4 = constrain(C4, 0, 65535);
-uint16_t MS5806_02BA52::C5 = constrain(C5, 0, 65535);
-uint16_t MS5806_02BA52::C6 = constrain(C6, 0, 65535);
-uint16_t MS5806_02BA52::C7 = constrain(C7, 0, 65535);
+int64_t MS5806_02BA52::C1 = constrain(C1, 0LL, 65535LL);
+int64_t MS5806_02BA52::C2 = constrain(C2, 0LL, 65535LL);
+int64_t MS5806_02BA52::C3 = constrain(C3, 0LL, 65535LL);
+int64_t MS5806_02BA52::C4 = constrain(C4, 0LL, 65535LL);
+int64_t MS5806_02BA52::C5 = constrain(C5, 0LL, 65535LL);
+int64_t MS5806_02BA52::C6 = constrain(C6, 0LL, 65535LL);
+int64_t MS5806_02BA52::C7 = constrain(C7, 0LL, 65535LL);
 //
 //  Pressure and Temp variables.
 //
-uint32_t MS5806_02BA52::DP1 = constrain(DP1, 0, 16777216UL);
-uint32_t MS5806_02BA52::DP2 = constrain(DP2, 0, 16777216UL);
+int64_t MS5806_02BA52::DP1 = constrain(DP1, 0LL, 16777216LL);
+int64_t MS5806_02BA52::DP2 = constrain(DP2, 0LL, 16777216LL);
 
 float MS5806_02BA52::temperature = 0.00;
 
-int32_t MS5806_02BA52::dT = constrain(dT, -16776960L, 16777216L);
-int32_t MS5806_02BA52::TEMP = constrain(TEMP, -4000L, 8500L);
+int64_t MS5806_02BA52::dT = constrain(dT, -16776960LL, 16777216LL);
+int64_t MS5806_02BA52::TEMP = constrain(TEMP, -4000LL, 8500LL);
 
 int64_t MS5806_02BA52::OFF = constrain(OFF, -17179344900LL, 25769410560LL);
 int64_t MS5806_02BA52::SENS = constrain(SENS, -8589672450LL, 12884705280LL);
-int32_t MS5806_02BA52::P = constrain(P, 1000L, 120000L);
+int64_t MS5806_02BA52::P = constrain(P, 1000LL, 120000LL);
 
 int64_t MS5806_02BA52::T2 = 0LL;
 int64_t MS5806_02BA52::OFF2 = 0LL;
@@ -74,7 +74,9 @@ void MS5806_02BA52::begin(void)
 void MS5806_02BA52::getData()
 {
 	getTemperature();
+	delay(1000);
 	getPressure();
+	
 }	
 //
 //  Gets the calculation coefficients from PROM.
@@ -86,7 +88,7 @@ void MS5806_02BA52::getPROM(void)
 	{
 		sendCommand(pPROM[i]);
 		readBytes(2);
-		uint16_t a = 0x0000;
+		uint16_t a = 0;
 		switch(i)
 		{
 			case 1:
@@ -128,27 +130,30 @@ void MS5806_02BA52::getPROM(void)
 			case 7:
 				a = (a | p_Response[0]) << 8;
 				a = a | p_Response[1];
-				a = 0x0000 | (a >> 4);
+				a = 0 | (a >> 4);
 				C7 = a;
 				break;
 			
 			default:
 				break;
 		}
-	}		
+	}
 } 
 //
 //  Request Temperature Data
 //
 void MS5806_02BA52::getTemperature(void)
 {
-	uint32_t tempT= 0x00000000;
+    DP2 = 0LL;
 	sendCommand(Dp2_4096);
+	delay(100);
 	readData();
-	tempT = (tempT | ((0x00000000 | p_Response[0]) << 16) | ((0x00000000 | p_Response[1]) << 8) | p_Response[2]);
-	DP2 = uint32_t(tempT);
-	dT = DP2 - (C5 * 256);
-	TEMP = 2000 + dT * (C6 / 8388608);
+	Serial.println(F(" "));
+	DP2 = (DP2 | p_Response[0] << 16 | p_Response[1] << 8 | p_Response[2]);
+	dT = DP2 - (C5 << 8);
+	TEMP = 2000 + ((dT * C6) >> 23);
+	OFF = (C2 << 17) + ((C4 * dT) >> 6);
+	SENS = (C1 << 16) + ((C3 * dT) >> 7);
 	if (TEMP >= 2000)
 	{
 		T2 = 0LL;
@@ -157,58 +162,64 @@ void MS5806_02BA52::getTemperature(void)
 	}
 	else if (TEMP < 2000)
 	{
+		
+		Serial.println(F("lowTemp Calc..."));
 		calcLowTemp();	
 		if (TEMP < -1500)
 		{
 			calcV_LowTemp();
 		}
 	}
+	
 	TEMP = TEMP - T2;
 	OFF = OFF - OFF2;
 	SENS = SENS - SENS2;
 	temperature = float(TEMP) / 100;
 	p_temperature = temperature;
+	
+	
 }
 //
 // Calculate Low Temperature Temp/Pressure Compensation
 //
 void MS5806_02BA52::calcLowTemp()
-{
-	T2 = pow(dT, 2) / 2147483648LL;
-	OFF2 = 61 * pow((TEMP - 2000), 2) / 16;
-	SENS2 = 2 * pow((TEMP - 2000), 2);
+{   
+    int64_t i = TEMP - 2000;
+    int64_t x =  i * i;
+    T2 = (dT * dT) >> 31;
+	OFF2 = (61 * x) >> 4;
+	SENS2 = 2 * x;
 }
 //
 // Calculate Very Low Temperature Temp/Pressure Compensation
 //
 void MS5806_02BA52::calcV_LowTemp()
 {
-	OFF2 = OFF2 + 20 * pow((TEMP + 1500), 2);
-	SENS2 = SENS2 + 12 * pow((TEMP + 1500), 2);
+    int64_t i = TEMP + 1500;
+    int64_t x =  i * i;
+	OFF2 = OFF2 + (20 * x);
+	SENS2 = SENS2 + (12 * x);
 }
 //
 //  Request Pressure Data
 //
 void MS5806_02BA52::getPressure(void)
 {
-	uint32_t tempP = 0x0000;
+	DP1 = 0LL;
 	sendCommand(Dp1_4096);
+	delay(100);
 	readData();
-	for (int i = 0; i < 3; i++)
-	{
-	    Serial.println(p_Response[i], HEX);
-	}
-	tempP = (tempP | ((0x0000 | p_Response[0]) << 16) | ((0x0000 | p_Response[1]) << 8) | p_Response[2]);
-	DP1 = uint32_t(tempP);  // base pressure value
-	Serial.print(F("prelim pressure: "));
-	Serial.println(DP1, DEC);
-	
+	DP1 = (DP1 | p_Response[0] << 16 | p_Response[1] << 8 | p_Response[2]);
+
 	/*****************calc temp compensated pressure****************/
+
+	P = (((DP1 * SENS) >> 21) - OFF) >> 15;
+	//Serial.println(P);
+	pressure = (float(P) / 100) + 36.23898835; // lees summit, mo offset at 316m above sea level.
+	T2 = 0LL;
+	OFF2 = 0LL;
+	SENS2 = 0LL;
 	
-	OFF = (C2 * 131072) + ((C4 * dT) / 64);
-	SENS = (C1 * 65536) + ((C3 * dT) / 128);
-	P = ((DP1 * SENS / 2097152 - OFF) / 32768);
-	pressure = float(P) / 100;	
 }
 
 //
@@ -227,7 +238,7 @@ void MS5806_02BA52::sendCommand(uint8_t cmd)
 void MS5806_02BA52::readByte(void)
 {
 	Wire.requestFrom(P_Address, 1);
-	delay(2);
+	delay(10);
 	if(Wire.available() > 0)
 	{
 		p_Response[0] = Wire.read();
@@ -242,7 +253,7 @@ void MS5806_02BA52::readBytes(int quantity)
 	uint8_t i = 0;
   
 	Wire.requestFrom(P_Address, quantity);
-	delay(2);  
+	delay(10);  
 	while(Wire.available() > 0)
     {
       p_Response[i] =  Wire.read(); 
@@ -256,6 +267,7 @@ void MS5806_02BA52::readBytes(int quantity)
 void MS5806_02BA52::readData(void)
 {
 	sendCommand(ADC_READ);
+	delay(100);
 	readBytes(3);
 }
 //

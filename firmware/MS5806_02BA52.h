@@ -3,7 +3,7 @@
   - Arduino library for controlling the Measurement Specialities MS5806_02BA52
     Pressure Sensor in I2C mode.
   
-  Copyright 2014 by AIW Industries, LLC (Richard Vogel)
+  Copyright 2014 by AIW Industries, LLC 
   
   This program is free software: you can redistribute it and/or modify 
   it under the terms of the GNU General Public License as published by 
